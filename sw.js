@@ -1,8 +1,9 @@
 /* Swipe N Rekt — service worker (app-shell cache + runtime caching for CDN deps) */
-const VERSION = "snr-v2";
+const VERSION = "snr-v3";
 const SHELL = [
   "./",
   "./index.html",
+  "./api.js",
   "./support.js",
   "./manifest.webmanifest",
   "./icons/icon.svg",
