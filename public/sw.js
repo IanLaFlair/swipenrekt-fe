@@ -1,17 +1,21 @@
-/* Swipe N Rekt — service worker (app-shell cache + runtime caching for CDN deps) */
-const VERSION = "snr-v3";
+/* Swipe N Rekt — service worker (app-shell cache + runtime caching).
+ *
+ * The app is a Vite build now: JS/CSS ship as content-hashed files under
+ * /assets/, so they can't be precached by name. The runtime cache below picks
+ * them up instead — safe precisely because the hash changes with the content.
+ * unpkg is gone from RUNTIME_HOSTS: React is bundled, not fetched at runtime.
+ */
+const VERSION = "snr-v4";
 const SHELL = [
-  "./",
-  "./index.html",
-  "./api.js",
-  "./support.js",
-  "./manifest.webmanifest",
-  "./icons/icon.svg",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/apple-touch-icon.png",
+  "/",
+  "/index.html",
+  "/manifest.webmanifest",
+  "/icons/icon.svg",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/apple-touch-icon.png",
 ];
-const RUNTIME_HOSTS = ["unpkg.com", "fonts.googleapis.com", "fonts.gstatic.com"];
+const RUNTIME_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
@@ -32,11 +36,12 @@ self.addEventListener("fetch", (e) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
-  // App navigation: network-first, fall back to cached shell (offline support).
+  // Never intercept the API — it must always hit the network.
+  if (url.hostname.endsWith("fachry.dev")) return;
+
+  // App navigation: network-first, fall back to the cached shell (offline).
   if (req.mode === "navigate") {
-    e.respondWith(
-      fetch(req).catch(() => caches.match("./index.html"))
-    );
+    e.respondWith(fetch(req).catch(() => caches.match("/index.html")));
     return;
   }
 
