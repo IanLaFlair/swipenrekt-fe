@@ -53,7 +53,7 @@ export default function Positions({ v }) {
                       {p.sideLabel}
                     </span>
                     <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "13px", color: "#cfcfe0" }}>
-                      ${p.stake}
+                      {"◎" + p.stake}
                     </span>
                   </div>
                   <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "15px", fontWeight: "700", color: p.payoutColor }}>
@@ -63,13 +63,15 @@ export default function Positions({ v }) {
                 {p.isPending ? (
                   <>
                   <div style={{ marginTop: "13px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontFamily: "'Space Mono',monospace", fontSize: "12px", color: "#ffcf4d" }}>
-                      <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#ffcf4d", animation: "snrPulse 1.4s infinite" }} />
-                      {"Settles in "}{p.cdStr}
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontFamily: "'Space Mono',monospace", fontSize: "12px", color: p.canSettle ? "#00ff9d" : "#ffcf4d" }}>
+                      <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: p.canSettle ? "#00ff9d" : "#ffcf4d", animation: "snrPulse 1.4s infinite" }} />
+                      {p.canSettle ? "Window closed · ready" : ("Settles in " + p.cdStr)}
                     </div>
-                    <button onClick={p.onSettle} style={{ background: "rgba(0,255,157,.12)", border: "1px solid rgba(0,255,157,.4)", borderRadius: "9px", color: "#00ff9d", fontSize: "11px", fontWeight: "700", letterSpacing: ".5px", padding: "7px 12px", cursor: "pointer" }}>
-                      SETTLE NOW
-                    </button>
+                    {p.canSettle ? (
+                      <button onClick={p.onSettle} style={{ background: "rgba(0,255,157,.12)", border: "1px solid rgba(0,255,157,.4)", borderRadius: "9px", color: "#00ff9d", fontSize: "11px", fontWeight: "700", letterSpacing: ".5px", padding: "7px 12px", cursor: "pointer" }}>
+                        SETTLE + CLAIM
+                      </button>
+                    ) : null}
                   </div>
                   </>
                 ) : null}

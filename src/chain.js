@@ -18,6 +18,8 @@ const DISC = {
   initialize_reward_pool: [139, 189, 60, 130, 44, 211, 218, 99],
   initialize_market: [35, 35, 189, 193, 155, 48, 170, 203],
   place_bet: [222, 62, 67, 220, 63, 166, 126, 33],
+  settle_market_mock: [36, 174, 175, 47, 184, 207, 166, 196],
+  claim_payout: [127, 240, 132, 62, 227, 198, 146, 133],
 };
 const disc = (n) => Buffer.from(DISC[n]);
 const enc = (s) => new TextEncoder().encode(s);
@@ -123,6 +125,63 @@ export function getPhantom() {
 export const solToLamports = (sol) => Math.round(sol * LAMPORTS_PER_SOL);
 export const lamportsToSol = (l) => l / LAMPORTS_PER_SOL;
 export const explorerTx = (sig) => `https://explorer.solana.com/tx/${sig}?cluster=${CLUSTER}`;
+
+// ---- settle + claim: resolve a market and pull the winner's SOL back --------
+// Demo path: the bettor (who created the market on first bet) settles it via
+// settle_market_mock to the decided outcome, then claims their payout. In a real
+// product settlement is oracle-driven (settle_market + Merkle proof); this is the
+// convenience path for the demo. `outcome` is 'won' | 'lost'; only 'won' claims.
+export async function settleAndClaimOnChain({ proposition, side, outcome }) {
+  const phantom = getPhantom();
+  if (!phantom) { const e = new Error("Phantom not found"); e.code = "NO_PHANTOM"; throw e; }
+  if (!phantom.publicKey) { await phantom.connect(); }
+  const user = new PublicKey(phantom.publicKey.toString());
+
+  const p = marketParams(proposition);
+  const market = marketPda(p);
+  if (!(await connection.getAccountInfo(market))) { const e = new Error("Market not on-chain yet"); e.code = "NO_MARKET"; throw e; }
+
+  const won = outcome === "won";
+  const userSide = side === "yes" ? 1 : 0;
+  const winningSide = won ? userSide : 1 - userSide;
+
+  // settle + (if won) claim in ONE transaction: within a tx, instructions run in
+  // order, so claim sees the just-settled market. One Phantom signature.
+  const ixSettle = new TransactionInstruction({
+    programId: PROGRAM_ID,
+    keys: [ak(market, false, true), ak(user, true, false)],
+    data: Buffer.concat([disc("settle_market_mock"), u8(winningSide)]),
+  });
+  const ixClaim = new TransactionInstruction({
+    programId: PROGRAM_ID,
+    keys: [
+      ak(market, false, false), ak(positionPda(market, user), false, true), ak(vaultPda(market), false, true),
+      ak(user, true, true), ak(SYS, false, false),
+    ],
+    data: disc("claim_payout"),
+  });
+
+  const send = async (ixs) => {
+    const tx = new Transaction().add(...ixs);
+    tx.feePayer = user;
+    tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+    const signed = await phantom.signTransaction(tx);
+    const sig = await connection.sendRawTransaction(signed.serialize());
+    await connection.confirmTransaction(sig, "confirmed");
+    return sig;
+  };
+
+  try {
+    const sig = await send(won ? [ixSettle, ixClaim] : [ixSettle]);
+    return won ? { claimSig: sig } : { settleSig: sig };
+  } catch (err) {
+    // Market already settled from a prior run? Fall back to claim-only.
+    if (won && /already settled|0x1771|custom program error/i.test(err.message || "")) {
+      return { claimSig: await send([ixClaim]) };
+    }
+    throw err;
+  }
+}
 
 // The connected Phantom wallet's live devnet SOL balance (null if not connected).
 // Phantom's connection doesn't survive a page reload, so if we're logged in but

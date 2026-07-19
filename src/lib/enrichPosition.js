@@ -17,6 +17,9 @@ export function enrichPosition(p) {
     payoutColor: p.status === 'won' ? '#00ff9d' : (p.status === 'lost' ? '#ff3d6e' : '#9a9ab0'),
     cdStr: mmss(p.countdown || 0),
     isPending: p.status === 'pending',
-    isSettled: p.status !== 'pending'
+    isSettled: p.status !== 'pending',
+    // Can only settle once the window (countdown) has elapsed — you can't claim
+    // before the outcome is known.
+    canSettle: p.status === 'pending' && (p.countdown || 0) <= 0
   });
 }

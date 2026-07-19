@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { CARDS, MATCHES, MATCHES_FULL, LEADERS, buildSeeds, buildHistory, makeReceipt } from "../data/seed.js";
 import { useAuthStore } from "./authStore.js";
-import { placeBetOnChain, getPhantom } from "../chain.js";
+import { placeBetOnChain, settleAndClaimOnChain, getPhantom } from "../chain.js";
 
 // Shared app/domain state that used to live on the old App class component.
 // Screen-only ephemeral UI state (drag/sheet gestures, pack-opening timers,
@@ -133,12 +133,19 @@ export const useAppStore = create((set, get) => ({
       id: 'p' + Date.now(),
       mLabel: card.home + ' ' + card.hs + '–' + card.as + ' ' + card.away,
       q: card.q, side, stake, price,
-      status: 'pending', countdown: 115,
+      status: 'pending', countdown: 25,
       outcome: Math.random() < 0.62 ? 'won' : 'lost',
       rare: side === 'yes' && Math.random() < 0.5,
       stat: 'Stat confirmed via TxODDS scores stream', statMin: card.min + 3,
       player: 'WORLD CUP MOMENT', moment: card.q + ' · ' + card.home + ' vs ' + card.away,
-      receipt: makeReceipt()
+      receipt: makeReceipt(),
+      // market-identity fields so SETTLE NOW can resolve this bet on-chain later
+      betProp: {
+        id: card.id,
+        onChainFixtureId: card.onChainFixtureId, onChainStatKey: card.onChainStatKey,
+        onChainThreshold: card.onChainThreshold, onChainComparison: card.onChainComparison,
+        onChainWindowStart: card.onChainWindowStart, onChainWindowEnd: card.onChainWindowEnd,
+      }
     };
     // Bets go ON-CHAIN: the stake is the user's own devnet SOL, escrowed by the
     // deployed program via a Phantom-signed place_bet. No DB balance involved.
@@ -197,7 +204,21 @@ export const useAppStore = create((set, get) => ({
   skipToast() { showToast(set, '⏭  Card skipped', 1500); },
   clearToast() { showToast(set, null, 0); },
 
-  settle(id) {
+  async settle(id) {
+    const pos = get().positions.find(p => p.id === id);
+    if (!pos) return;
+    // On-chain bets settle + claim for real; seeded/mock positions just flip.
+    if (pos.onchain && pos.betProp && getPhantom()) {
+      showToast(set, '⏳  Settling on-chain…', 5000);
+      try {
+        const { claimSig } = await settleAndClaimOnChain({ proposition: pos.betProp, side: pos.side, outcome: pos.outcome });
+        set(s => ({ positions: s.positions.map(p => p.id === id ? Object.assign({}, p, { status: p.outcome, countdown: 0, settleTxSig: claimSig || p.txSig }) : p) }));
+        showToast(set, pos.outcome === 'won' ? '✓  Won — SOL claimed on-chain' : '✓  Settled — no win this time', 3400);
+      } catch (err) {
+        showToast(set, '⚠  ' + (err && err.message ? err.message : 'Settle failed'), 3400);
+      }
+      return;
+    }
     set(s => ({ positions: s.positions.map(p => p.id === id ? Object.assign({}, p, { status: p.outcome, countdown: 0 }) : p) }));
   },
 
