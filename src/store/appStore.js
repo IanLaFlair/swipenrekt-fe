@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { CARDS, MATCHES, MATCHES_FULL, LEADERS, buildSeeds, buildHistory, makeReceipt } from "../data/seed.js";
 import { useAuthStore } from "./authStore.js";
+import { placeBetOnChain, getPhantom } from "../chain.js";
 
 // Shared app/domain state that used to live on the old App class component.
 // Screen-only ephemeral UI state (drag/sheet gestures, pack-opening timers,
@@ -139,24 +140,34 @@ export const useAppStore = create((set, get) => ({
       player: 'WORLD CUP MOMENT', moment: card.q + ' · ' + card.home + ' vs ' + card.away,
       receipt: makeReceipt()
     };
-    // A real backend bet is final — it can't be locally undone. So in live mode
-    // we skip the optimistic "undo" affordance and confirm/reject via toast.
+    // Bets go ON-CHAIN: the stake is the user's own devnet SOL, escrowed by the
+    // deployed program via a Phantom-signed place_bet. No DB balance involved.
+    // A real on-chain bet is final — no local undo.
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(card.id || '');
-    const willCallApi = get().apiLive && window.SNR && window.SNR.getToken() && isUuid;
+    const phantom = getPhantom();
+    const goChain = isUuid && !!phantom;
     set(s => ({ positions: [newPos, ...s.positions] }));
-    if (willCallApi) {
-      window.SNR.raw.placeBet(card.id, side === 'yes', stake)
-        .then(() => {
-          showToast(set, '✓  Position placed · $' + stake + ' on ' + (side === 'yes' ? 'YES' : 'NO'), 2400);
-          get().loadBets();
-          get().loadProfile();
+    if (goChain) {
+      // Demo scale: the UI's number maps to a small SOL amount ($20 -> 0.02 SOL)
+      // so a devnet wallet lasts many bets.
+      const stakeSol = Math.max(0.001, stake / 1000);
+      placeBetOnChain({ propositionId: card.id, side, stakeSol, priceProb: card.yes })
+        .then(({ signature }) => {
+          set(s => ({ positions: s.positions.map(p => p.id === newPos.id ? { ...p, txSig: signature, onchain: true } : p) }));
+          showToast(set, '✓  ' + stakeSol.toFixed(3) + ' SOL escrowed on-chain', 3400);
         })
         .catch((err) => {
           set(s => ({ positions: s.positions.filter(p => p.id !== newPos.id) }));
-          showToast(set, '⚠  ' + (err && err.message ? err.message : 'Bet failed'), 2800);
+          const msg = err.code === 'NO_PHANTOM' ? 'Connect Phantom to bet'
+            : err.code === 'LOW_BALANCE' ? 'Need devnet SOL — faucet.solana.com'
+            : (err && err.message) || 'On-chain bet failed';
+          showToast(set, '⚠  ' + msg, 3400);
         });
+    } else if (isUuid && !phantom) {
+      set(s => ({ positions: s.positions.filter(p => p.id !== newPos.id) }));
+      showToast(set, '⚠  Connect Phantom (devnet) to place a bet', 3200);
     }
-    return { willCallApi };
+    return { willCallApi: goChain };
   },
 
   // Advances to the next card after the (page-local) exit animation finishes.

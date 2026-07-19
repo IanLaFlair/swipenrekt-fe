@@ -1,3 +1,7 @@
+import { Buffer } from "buffer";
+// @solana/web3.js and our on-chain instruction encoding assume Node's Buffer.
+if (typeof globalThis.Buffer === "undefined") globalThis.Buffer = Buffer;
+
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
