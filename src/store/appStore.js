@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { CARDS, MATCHES, MATCHES_FULL, LEADERS, makeReceipt } from "../data/seed.js";
 import { useAuthStore } from "./authStore.js";
 import { placeBetOnChain, settleAndClaimOnChain, getPhantom } from "../chain.js";
@@ -17,7 +18,7 @@ function showToast(set, text, ms) {
 
 let undoLockTimer = null;
 
-export const useAppStore = create((set, get) => ({
+export const useAppStore = create(persist((set, get) => ({
   cards: CARDS,
   index: 0,
   timer: CARDS[0].windowSec,
@@ -119,9 +120,15 @@ export const useAppStore = create((set, get) => ({
       });
       const positions = mapped.filter(p => p.status === 'pending');
       const history = mapped.filter(p => p.status !== 'pending');
+      // Merge, don't replace: keep locally-placed on-chain bets (persisted in
+      // localStorage, not returned by /bets) and add the API's bets on top.
+      const merge = (existing, incoming) => {
+        const incomingIds = new Set(incoming.map(x => x.id));
+        return [...existing.filter(x => !incomingIds.has(x.id)), ...incoming];
+      };
       set(s => ({
-        positions: positions.length ? positions : s.positions,
-        history: history.length ? history : s.history
+        positions: merge(s.positions || [], positions),
+        history: merge(s.history || [], history)
       }));
     } catch (_) {}
   },
@@ -248,4 +255,12 @@ export const useAppStore = create((set, get) => ({
       get().jumpToNonLive(id);
     }
   }
+}), {
+  // Persist only the user's bets so on-chain positions survive a page refresh
+  // (they live on-chain, but the app needs the display record to show them).
+  // Everything else (cards, matches, leaders) is re-fetched/seeded on load.
+  name: "snr-bets",
+  storage: createJSONStorage(() => localStorage),
+  version: 1,
+  partialize: (s) => ({ positions: s.positions, history: s.history }),
 }));
