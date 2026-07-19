@@ -28,6 +28,9 @@ export function enrichPosition(p) {
     isLost: p.status === 'lost',
     // A declared win the user hasn't collected yet → show the CLAIM button.
     canClaim: p.status === 'won' && !p.claimed,
-    claimed: !!p.claimed
+    claimed: !!p.claimed,
+    // Real devnet explorer links for the on-chain place_bet / claim txs.
+    explorerUrl: p.txSig ? ('https://explorer.solana.com/tx/' + p.txSig + '?cluster=devnet') : null,
+    claimUrl: p.claimTxSig ? ('https://explorer.solana.com/tx/' + p.claimTxSig + '?cluster=devnet') : null
   });
 }

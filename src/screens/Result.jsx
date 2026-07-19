@@ -137,9 +137,11 @@ export default function Result({ v }) {
                 {" CPI"}
               </span>
             </div>
-            <button style={{ marginTop: "12px", width: "100%", background: "transparent", border: "1px solid rgba(255,255,255,.14)", borderRadius: "10px", color: "#cfcfe0", fontSize: "12px", fontWeight: "600", padding: "10px 0", cursor: "pointer" }}>
-              View on Solana Explorer ↗
-            </button>
+            {v.selExplorerUrl ? (
+              <a href={v.selExplorerUrl} target="_blank" rel="noreferrer" style={{ display: "block", textAlign: "center", marginTop: "12px", width: "100%", background: "transparent", border: "1px solid rgba(255,255,255,.14)", borderRadius: "10px", color: "#cfcfe0", fontSize: "12px", fontWeight: "600", padding: "10px 0", cursor: "pointer", textDecoration: "none" }}>
+                View on Solana Explorer ↗
+              </a>
+            ) : null}
           </div>
           {v.selRare ? (
             <>

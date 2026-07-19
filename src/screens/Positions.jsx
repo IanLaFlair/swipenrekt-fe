@@ -91,6 +91,16 @@ export default function Positions({ v }) {
                     View verifiable receipt →
                   </button>
                 ) : null}
+                {p.explorerUrl ? (
+                  <a href={p.explorerUrl} target="_blank" rel="noreferrer" style={{ display: "block", marginTop: "10px", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#6a86ff", textDecoration: "none" }}>
+                    ↗ View bet tx on Solana Explorer
+                  </a>
+                ) : null}
+                {p.claimUrl ? (
+                  <a href={p.claimUrl} target="_blank" rel="noreferrer" style={{ display: "block", marginTop: "6px", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#00ff9d", textDecoration: "none" }}>
+                    ↗ View claim tx on Solana Explorer
+                  </a>
+                ) : null}
               </div>
             </React.Fragment>
           ))}

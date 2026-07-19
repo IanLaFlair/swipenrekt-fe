@@ -36,6 +36,7 @@ export default function ResultPage() {
     rcN1: shortHex(rc.n1), rcN2: shortHex(rc.n2), rcSig: shortHex(rc.sig),
     rcSlot: rc.slot || 0,
     selRare: selWon && !!sel.rare,
+    selExplorerUrl: sel.txSig ? ('https://explorer.solana.com/tx/' + sel.txSig + '?cluster=devnet') : null,
     onClaim: () => setDropOpen(true)
   };
 
