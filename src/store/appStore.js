@@ -150,7 +150,7 @@ export const useAppStore = create((set, get) => ({
     if (goChain) {
       // The stake is already in SOL (UI presets are 0.01–0.1 SOL).
       const stakeSol = Math.max(0.001, stake);
-      placeBetOnChain({ propositionId: card.id, side, stakeSol, priceProb: card.yes })
+      placeBetOnChain({ proposition: card, propositionId: card.id, side, stakeSol, priceProb: card.yes })
         .then(({ signature }) => {
           set(s => ({ positions: s.positions.map(p => p.id === newPos.id ? { ...p, txSig: signature, onchain: true } : p) }));
           showToast(set, '✓  ' + stakeSol.toFixed(3) + ' SOL escrowed on-chain', 3400);

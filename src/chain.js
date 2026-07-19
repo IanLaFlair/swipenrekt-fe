@@ -45,14 +45,36 @@ function hash32(str) {
   for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
   return h >>> 0;
 }
-export function marketParams(propositionId) {
-  const a = hash32(propositionId);
-  const b = hash32("stat:" + propositionId);
+// Accepts a proposition id (string) or the whole card/proposition object. When
+// the backend has populated the on-chain fields (onChainFixtureId/StatKey/
+// WindowStart), those define the market — so the frontend hits the SAME PDA the
+// backend created. Otherwise fall back to a deterministic hash of the id with a
+// fixed always-open window (works standalone until the backend catches up).
+const has = (v) => v !== null && v !== undefined && v !== "";
+export function marketParams(prop) {
+  const p = typeof prop === "object" && prop ? prop : {};
+  const id = typeof prop === "string" ? prop : (p.id || "");
+  if (has(p.onChainFixtureId) && has(p.onChainStatKey) && has(p.onChainWindowStart)) {
+    return {
+      fixtureId: Number(p.onChainFixtureId),
+      statKey: Number(p.onChainStatKey),
+      windowStart: Number(p.onChainWindowStart),
+      windowEnd: has(p.onChainWindowEnd) ? Number(p.onChainWindowEnd) : WINDOW_END,
+      period: PERIOD,
+      threshold: has(p.onChainThreshold) ? Number(p.onChainThreshold) : THRESHOLD,
+      comparison: has(p.onChainComparison) ? Number(p.onChainComparison) : COMPARISON,
+      source: "backend",
+    };
+  }
+  const a = hash32(id);
+  const b = hash32("stat:" + id);
   return {
     fixtureId: a,                 // fits i64
     statKey: (b % 1_000_000) + 1, // u32, non-zero
     windowStart: WINDOW_START,
     windowEnd: WINDOW_END,
+    period: PERIOD, threshold: THRESHOLD, comparison: COMPARISON,
+    source: "derived",
   };
 }
 
@@ -76,7 +98,7 @@ export function ixInitMarket(authority, p) {
   return new TransactionInstruction({
     programId: PROGRAM_ID,
     keys: [ak(marketPda(p), false, true), ak(authority, true, true), ak(SYS, false, false)],
-    data: Buffer.concat([disc("initialize_market"), i64(p.fixtureId), u32(p.statKey), i32(PERIOD), i32(THRESHOLD), u8(COMPARISON), i64(p.windowStart), i64(p.windowEnd)]),
+    data: Buffer.concat([disc("initialize_market"), i64(p.fixtureId), u32(p.statKey), i32(p.period ?? PERIOD), i32(p.threshold ?? THRESHOLD), u8(p.comparison ?? COMPARISON), i64(p.windowStart), i64(p.windowEnd)]),
   });
 }
 export function ixPlaceBet(user, p, side /* 'yes'|'no' */, stakeLamports, priceBps) {
@@ -123,13 +145,15 @@ export async function getWalletSol() {
 // stakeSol in SOL (e.g. 0.05). priceProb = implied probability 0..1.
 // Creates the market on first bet if it doesn't exist yet (payer = user),
 // then sends place_bet. Phantom signs; returns the confirmed tx signature.
-export async function placeBetOnChain({ propositionId, side, stakeSol, priceProb }) {
+export async function placeBetOnChain({ proposition, propositionId, side, stakeSol, priceProb }) {
   const phantom = getPhantom();
   if (!phantom) { const e = new Error("Phantom not found"); e.code = "NO_PHANTOM"; throw e; }
   if (!phantom.publicKey) { await phantom.connect(); }
   const user = new PublicKey(phantom.publicKey.toString());
 
-  const p = marketParams(propositionId);
+  // Prefer the full proposition (carries the backend's on-chain fields); fall
+  // back to just the id (hash-derived market).
+  const p = marketParams(proposition || propositionId);
   const market = marketPda(p);
 
   // Enough devnet SOL for the stake + ~account rent + fees?

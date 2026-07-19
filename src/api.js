@@ -148,7 +148,17 @@
       oddsYes: num(p.oddsYes), oddsNo: num(p.oddsNo),
       status: p.status || "open",
       settlesAt: p.settlesAt || null,
-      windowSec
+      windowSec,
+      // On-chain market bridge fields (backend-populated; null until Fachry
+      // creates the market on-chain). When present, the frontend derives the
+      // market PDA from these instead of hashing the proposition id.
+      onChainFixtureId: p.onChainFixtureId,
+      onChainStatKey: p.onChainStatKey,
+      onChainThreshold: p.onChainThreshold,
+      onChainComparison: p.onChainComparison,
+      onChainWindowStart: p.onChainWindowStart,
+      onChainWindowEnd: p.onChainWindowEnd,
+      marketAddress: p.marketAddress || null
     };
   }
 
