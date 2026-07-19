@@ -175,7 +175,7 @@ export const useAppStore = create(persist((set, get) => ({
       // Until then the bet stays pending; there is no local coin-flip.
       status: 'pending', countdown: initCd, settlesAt, outcome: null,
       rare: side === 'yes',
-      stat: 'Stat confirmed via TxODDS scores stream', statMin: card.min + 3,
+      stat: 'Market data via TxODDS-powered backend', statMin: card.min,
       player: 'WORLD CUP MOMENT', moment: card.q + ' · ' + card.home + ' vs ' + card.away,
       receipt: makeReceipt(),
       // market-identity fields so SETTLE NOW can resolve this bet on-chain later

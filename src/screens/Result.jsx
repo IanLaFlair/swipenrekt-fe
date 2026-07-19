@@ -64,7 +64,7 @@ export default function Result({ v }) {
                 <path d="M8 11l2 2 4-4" stroke="#00ff9d" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <span style={{ fontSize: "12px", fontWeight: "700", letterSpacing: "1.5px", color: "#00ff9d" }}>
-                VERIFIABLE RESOLUTION
+                ON-CHAIN RECORD
               </span>
             </div>
             <div style={{ background: "rgba(0,255,157,.05)", borderRadius: "10px", padding: "11px 13px", marginBottom: "14px" }}>
@@ -77,71 +77,46 @@ export default function Result({ v }) {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "9px", fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
-                <span style={{ color: "#6a6a7c" }}>
-                  Merkle root
-                </span>
-                <span style={{ color: "#cfcfe0" }}>
-                  {v.rcRoot}
-                </span>
+                <span style={{ color: "#6a6a7c" }}>Program</span>
+                <a href={v.selProgramUrl} target="_blank" rel="noreferrer" style={{ color: "#6a86ff", textDecoration: "none" }}>
+                  iZvZwSK…biffQ ↗
+                </a>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
-                <span style={{ color: "#6a6a7c" }}>
-                  Leaf hash
-                </span>
-                <span style={{ color: "#cfcfe0" }}>
-                  {v.rcLeaf}
-                </span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
-                <span style={{ color: "#6a6a7c" }}>
-                  Proof · node 0
-                </span>
-                <span style={{ color: "#cfcfe0" }}>
-                  {v.rcN1}
-                </span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
-                <span style={{ color: "#6a6a7c" }}>
-                  Proof · node 1
-                </span>
-                <span style={{ color: "#cfcfe0" }}>
-                  {v.rcN2}
-                </span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
-                <span style={{ color: "#6a6a7c" }}>
-                  Settlement tx
-                </span>
-                <span style={{ color: "#00ff9d" }}>
-                  {v.rcSig}
-                </span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
-                <span style={{ color: "#6a6a7c" }}>
-                  Slot
-                </span>
-                <span style={{ color: "#cfcfe0" }}>
-                  {v.rcSlot}
-                </span>
-              </div>
+              {v.selMarketAddr ? (
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
+                  <span style={{ color: "#6a6a7c" }}>Market</span>
+                  <span style={{ color: "#cfcfe0" }}>{v.selMarketAddr}</span>
+                </div>
+              ) : null}
+              {v.selBetUrl ? (
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
+                  <span style={{ color: "#6a6a7c" }}>Bet tx (place_bet)</span>
+                  <a href={v.selBetUrl} target="_blank" rel="noreferrer" style={{ color: "#00ff9d", textDecoration: "none" }}>
+                    {v.selBetSig} ↗
+                  </a>
+                </div>
+              ) : null}
+              {v.selClaimUrl ? (
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
+                  <span style={{ color: "#6a6a7c" }}>Claim tx (claim_payout)</span>
+                  <a href={v.selClaimUrl} target="_blank" rel="noreferrer" style={{ color: "#00ff9d", textDecoration: "none" }}>
+                    {v.selClaimSig} ↗
+                  </a>
+                </div>
+              ) : null}
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "7px", marginTop: "14px", background: "rgba(0,255,157,.1)", border: "1px solid rgba(0,255,157,.25)", borderRadius: "10px", padding: "9px 12px" }}>
-              <span style={{ color: "#00ff9d", fontSize: "13px" }}>
-                ✓
-              </span>
-              <span style={{ fontSize: "11.5px", fontWeight: "600", color: "#e6f9f0" }}>
-                {"Settled on-chain via "}
-                <span style={{ fontFamily: "'Space Mono',monospace" }}>
-                  validate_stat
+            {v.selOnchain ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "7px", marginTop: "14px", background: "rgba(0,255,157,.1)", border: "1px solid rgba(0,255,157,.25)", borderRadius: "10px", padding: "9px 12px" }}>
+                <span style={{ color: "#00ff9d", fontSize: "13px" }}>◎</span>
+                <span style={{ fontSize: "11.5px", fontWeight: "600", color: "#e6f9f0" }}>
+                  {v.selSettleLabel}
                 </span>
-                {" CPI"}
-              </span>
-            </div>
-            {v.selExplorerUrl ? (
-              <a href={v.selExplorerUrl} target="_blank" rel="noreferrer" style={{ display: "block", textAlign: "center", marginTop: "12px", width: "100%", background: "transparent", border: "1px solid rgba(255,255,255,.14)", borderRadius: "10px", color: "#cfcfe0", fontSize: "12px", fontWeight: "600", padding: "10px 0", cursor: "pointer", textDecoration: "none" }}>
-                View on Solana Explorer ↗
-              </a>
-            ) : null}
+              </div>
+            ) : (
+              <div style={{ marginTop: "14px", background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", borderRadius: "10px", padding: "9px 12px", fontSize: "11.5px", color: "#9a9ab0" }}>
+                Off-chain record — this bet was not placed on-chain.
+              </div>
+            )}
           </div>
           {v.selRare ? (
             <>

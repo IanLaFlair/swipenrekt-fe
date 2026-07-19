@@ -36,6 +36,18 @@ export default function ResultPage() {
     rcN1: shortHex(rc.n1), rcN2: shortHex(rc.n2), rcSig: shortHex(rc.sig),
     rcSlot: rc.slot || 0,
     selRare: selWon && !!sel.rare,
+    // ---- real on-chain record (no fabricated Merkle proof) ----
+    selOnchain: !!sel.txSig,
+    selBetSig: shortHex(sel.txSig),
+    selBetUrl: sel.txSig ? ('https://explorer.solana.com/tx/' + sel.txSig + '?cluster=devnet') : null,
+    selClaimSig: shortHex(sel.claimTxSig),
+    selClaimUrl: sel.claimTxSig ? ('https://explorer.solana.com/tx/' + sel.claimTxSig + '?cluster=devnet') : null,
+    selMarketAddr: shortHex(sel.betProp && sel.betProp.marketAddress),
+    selProgramId: 'iZvZwSKPvRZpEqxyXSiRGos9pGuuzygmKdcAB6biffQ',
+    selProgramUrl: 'https://explorer.solana.com/address/iZvZwSKPvRZpEqxyXSiRGos9pGuuzygmKdcAB6biffQ?cluster=devnet',
+    selSettleLabel: selWon ? 'Won — winner declared by backend authority'
+      : (sel.status === 'lost' ? 'Lost — settled by backend authority'
+      : 'Awaiting settlement (backend authority)'),
     selExplorerUrl: sel.txSig ? ('https://explorer.solana.com/tx/' + sel.txSig + '?cluster=devnet') : null,
     onClaim: () => setDropOpen(true)
   };
