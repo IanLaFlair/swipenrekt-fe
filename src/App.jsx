@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 // api.js is an IIFE that installs window.SNR — imported for its side effect so
 // the bundler owns it (no extra request, same tested code).
 import "./api.js";
@@ -28,10 +28,16 @@ export default function App() {
     return () => clearInterval(iv);
   }, []);
 
+  // Keying the wrapper on the pathname remounts it on every navigation, which
+  // replays the CSS entrance animation (.snr-page) so the incoming screen fades
+  // + slides in instead of flashing. Routes still resolve against `location`.
+  const location = useLocation();
+
   return (
     <div style={{ minHeight: "100dvh", width: "100%", background: "#07070b", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Space Grotesk',sans-serif" }}>
       <div style={{ position: "relative", width: "100%", maxWidth: "480px", height: "100dvh", background: "#0a0a0f", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <Routes>
+        <div key={location.pathname} className="snr-page" style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column" }}>
+        <Routes location={location}>
           <Route element={<RedirectIfAuthed />}>
             <Route path="/" element={<SplashPage />} />
             <Route path="/connect" element={<ConnectPage />} />
@@ -50,6 +56,7 @@ export default function App() {
           </Route>
           <Route path="*" element={<CatchAll />} />
         </Routes>
+        </div>
       </div>
     </div>
   );

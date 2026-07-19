@@ -26,6 +26,9 @@
   html,body{margin:0;padding:0;height:100%;background:#07070b;-webkit-font-smoothing:antialiased;overscroll-behavior:none;}:root{color-scheme:dark;}
   *{box-sizing:border-box;}
   @keyframes snrPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+  @keyframes snrPageIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .snr-page{animation:snrPageIn .30s cubic-bezier(.22,.61,.36,1) both;will-change:opacity,transform;}
+  @media (prefers-reduced-motion:reduce){.snr-page{animation:none;}}
   @keyframes dropIn{from{opacity:0;transform:scale(.62) translateY(30px) rotate(-7deg)}to{opacity:1;transform:scale(1) translateY(0) rotate(0)}}
   @keyframes packWiggle{0%,100%{transform:rotate(-1.4deg) translateY(0)}50%{transform:rotate(1.4deg) translateY(-5px)}}
   @keyframes shimmer{0%{background-position:-140% 0}100%{background-position:240% 0}}
