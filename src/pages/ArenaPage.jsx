@@ -155,10 +155,16 @@ export default function ArenaPage() {
   // ---- derived view values ----
   const yesPct = Math.round(raw.yes * 100);
   const noPct = 100 - yesPct;
+  // Decimal odds = payout multiplier. Use the API's odds when present, else
+  // derive from the implied probability (for seeded cards).
+  const oddsYesMult = (raw.oddsYes && raw.oddsYes > 0) ? raw.oddsYes : (raw.yes > 0 ? 1 / raw.yes : 0);
+  const oddsNoMult = (raw.oddsNo && raw.oddsNo > 0) ? raw.oddsNo : ((1 - raw.yes) > 0 ? 1 / (1 - raw.yes) : 0);
   const card = Object.assign({}, raw, {
     yesPct, noPct, yesCents: yesPct, noCents: noPct,
-    yesWin: stake > 0 ? +(stake / raw.yes).toFixed(3) : 0,
-    noWin: stake > 0 ? +(stake / (1 - raw.yes)).toFixed(3) : 0,
+    oddsYesMult: +oddsYesMult.toFixed(2),
+    oddsNoMult: +oddsNoMult.toFixed(2),
+    yesWin: stake > 0 ? +(stake * oddsYesMult).toFixed(3) : 0,
+    noWin: stake > 0 ? +(stake * oddsNoMult).toFixed(3) : 0,
     windowLabel: Math.round(raw.windowSec / 60) + " MIN",
     scoreStr: raw.hs + " : " + raw.as
   });
@@ -193,6 +199,7 @@ export default function ArenaPage() {
   const sheetOpen = !!sheet;
   const sSide = sheet ? sheet.side : "yes";
   const price = sSide === "yes" ? raw.yes : (1 - raw.yes);
+  const sheetOdds = sSide === "yes" ? oddsYesMult : oddsNoMult;
   const sheetAccent = sSide === "yes" ? "#00ff9d" : "#ff3d6e";
   const sheetAccentSoft = sSide === "yes" ? "rgba(0,255,157,.12)" : "rgba(255,61,110,.12)";
   const sheetAccentBorder = sSide === "yes" ? "rgba(0,255,157,.45)" : "rgba(255,61,110,.45)";
@@ -320,12 +327,12 @@ export default function ArenaPage() {
           <div style={{ display: "flex", gap: "10px", marginTop: "14px", position: "relative", zIndex: "2" }}>
             <div style={{ flex: "1", background: "rgba(255,61,110,.08)", border: "1px solid rgba(255,61,110,.28)", borderRadius: "14px", padding: "11px 13px", display: "flex", flexDirection: "column", gap: "2px" }}>
               <div style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "1px", color: "#ff3d6e" }}>← NO</div>
-              <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "22px", fontWeight: "700", color: "#fff" }}>{card.noCents}¢</div>
+              <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "22px", fontWeight: "700", color: "#fff" }}>{card.oddsNoMult}{"×"}</div>
               <div style={{ fontSize: "11px", color: "#7a7a8c" }}>{"◎" + stake}{" → ◎"}{card.noWin}</div>
             </div>
             <div style={{ flex: "1", background: "rgba(0,255,157,.08)", border: "1px solid rgba(0,255,157,.28)", borderRadius: "14px", padding: "11px 13px", display: "flex", flexDirection: "column", gap: "2px", alignItems: "flex-end", textAlign: "right" }}>
               <div style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "1px", color: "#00ff9d" }}>YES →</div>
-              <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "22px", fontWeight: "700", color: "#fff" }}>{card.yesCents}¢</div>
+              <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "22px", fontWeight: "700", color: "#fff" }}>{card.oddsYesMult}{"×"}</div>
               <div style={{ fontSize: "11px", color: "#7a7a8c" }}>{"◎" + stake}{" → ◎"}{card.yesWin}</div>
             </div>
           </div>
@@ -446,12 +453,12 @@ export default function ArenaPage() {
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,.03)", borderRadius: "14px", padding: "13px 16px", marginBottom: "18px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-            <span style={{ fontSize: "10px", letterSpacing: "1px", color: "#6a6a7c", fontWeight: "600" }}>PRICE</span>
-            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "15px", fontWeight: "700", color: "#cfcfe0" }}>{Math.round(price * 100)}¢</span>
+            <span style={{ fontSize: "10px", letterSpacing: "1px", color: "#6a6a7c", fontWeight: "600" }}>ODDS</span>
+            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "15px", fontWeight: "700", color: "#cfcfe0" }}>{sheetOdds.toFixed(2)}{"×"}</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "flex-end" }}>
             <span style={{ fontSize: "10px", letterSpacing: "1px", color: "#6a6a7c", fontWeight: "600" }}>WIN →</span>
-            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "24px", fontWeight: "700", color: sheetAccent }}>◎{stake > 0 ? +(stake / price).toFixed(3) : 0}</span>
+            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "24px", fontWeight: "700", color: sheetAccent }}>◎{stake > 0 ? +(stake * sheetOdds).toFixed(3) : 0}</span>
           </div>
         </div>
         <div data-slidetrack="1" style={{ position: "relative", height: "56px", borderRadius: "16px", background: sheetAccentSoft, border: `1px solid ${sheetAccentBorder}`, overflow: "hidden" }}>
