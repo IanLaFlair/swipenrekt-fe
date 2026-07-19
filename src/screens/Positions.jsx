@@ -33,6 +33,11 @@ export default function Positions({ v }) {
           </div>
         </div>
         <div style={{ flex: "1", overflowY: "auto", padding: "2px 18px 24px", display: "flex", flexDirection: "column", gap: "12px" }}>
+          {(v.positionsView || []).length === 0 ? (
+            <div style={{ margin: "auto 0", textAlign: "center", color: "#7a7a8c", fontFamily: "'Space Mono',monospace", fontSize: "13px", padding: "40px 20px" }}>
+              No open positions.<br />Swipe in the arena to place a bet.
+            </div>
+          ) : null}
           {(v.positionsView || []).map((p, p__i) => (
             <React.Fragment key={p?.id ?? p__i}>
               <div style={{ background: "#14141d", border: "1px solid rgba(255,255,255,.07)", borderRadius: "16px", padding: "14px" }}>

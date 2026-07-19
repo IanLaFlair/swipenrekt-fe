@@ -15,6 +15,11 @@ export default function History({ v }) {
           </div>
         </div>
         <div style={{ flex: "1", overflowY: "auto", padding: "2px 18px 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
+          {(v.historyView || []).length === 0 ? (
+            <div style={{ margin: "auto 0", textAlign: "center", color: "#7a7a8c", fontFamily: "'Space Mono',monospace", fontSize: "13px", padding: "40px 20px" }}>
+              No settled bets yet.
+            </div>
+          ) : null}
           {(v.historyView || []).map((p, p__i) => (
             <React.Fragment key={p?.id ?? p__i}>
               <div onClick={p.onOpen} style={{ background: "#14141d", border: "1px solid rgba(255,255,255,.07)", borderRadius: "14px", padding: "13px 14px", cursor: "pointer" }}>
@@ -35,7 +40,7 @@ export default function History({ v }) {
                       {p.sideLabel}
                     </span>
                     <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px", color: "#9a9ab0" }}>
-                      ${p.stake}
+                      {"◎" + p.stake}
                     </span>
                   </div>
                   <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "14px", fontWeight: "700", color: p.payoutColor }}>

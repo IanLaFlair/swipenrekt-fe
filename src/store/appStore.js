@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { CARDS, MATCHES, MATCHES_FULL, LEADERS, buildSeeds, buildHistory, makeReceipt } from "../data/seed.js";
+import { CARDS, MATCHES, MATCHES_FULL, LEADERS, makeReceipt } from "../data/seed.js";
 import { useAuthStore } from "./authStore.js";
 import { placeBetOnChain, settleAndClaimOnChain, getPhantom } from "../chain.js";
 
@@ -23,8 +23,8 @@ export const useAppStore = create((set, get) => ({
   timer: CARDS[0].windowSec,
   matches: MATCHES,
   matchesFull: MATCHES_FULL,
-  positions: buildSeeds(),
-  history: buildHistory(),
+  positions: [], // real bets only: from GET /bets + on-chain bets placed this session
+  history: [],   // real settled bets from GET /bets
   leaders: LEADERS,
   apiLive: false,
   toast: null,
