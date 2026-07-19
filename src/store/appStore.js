@@ -32,9 +32,19 @@ export const useAppStore = create(persist((set, get) => ({
   undo: null, // { prevIndex, side, stake }
 
   tick() {
+    const now = Date.now();
     set(s => ({
       timer: s.timer > 0 ? s.timer - 1 : 0,
-      positions: s.positions.map(p => (p.status === 'pending' && p.countdown > 0) ? { ...p, countdown: p.countdown - 1 } : p)
+      positions: s.positions.map(p => {
+        if (p.status !== 'pending') return p;
+        // Backend-timed bets: derive the remaining countdown from settlesAt so
+        // it's correct after a refresh; legacy/local ones just decrement.
+        if (p.settlesAt) {
+          const cd = Math.max(0, Math.round((new Date(p.settlesAt).getTime() - now) / 1000));
+          return p.countdown === cd ? p : { ...p, countdown: cd };
+        }
+        return p.countdown > 0 ? { ...p, countdown: p.countdown - 1 } : p;
+      })
     }));
   },
 
@@ -140,11 +150,18 @@ export const useAppStore = create(persist((set, get) => ({
   // ---- placing a bet ----
   placeBet(card, side, stake) {
     const price = side === 'yes' ? card.yes : (1 - card.yes);
+    // Settle time comes from the backend proposition's settlesAt. We store the
+    // absolute timestamp so the countdown stays accurate across refreshes
+    // (recomputed from the clock in tick(), not a decrementing counter).
+    const settlesAt = card.settlesAt || null;
+    const initCd = settlesAt
+      ? Math.max(0, Math.round((new Date(settlesAt).getTime() - Date.now()) / 1000))
+      : (card.windowSec || 25);
     const newPos = {
       id: 'p' + Date.now(),
       mLabel: card.home + ' ' + card.hs + '–' + card.as + ' ' + card.away,
       q: card.q, side, stake, price,
-      status: 'pending', countdown: 25,
+      status: 'pending', countdown: initCd, settlesAt,
       outcome: Math.random() < 0.62 ? 'won' : 'lost',
       rare: side === 'yes' && Math.random() < 0.5,
       stat: 'Stat confirmed via TxODDS scores stream', statMin: card.min + 3,

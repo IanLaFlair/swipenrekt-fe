@@ -184,7 +184,11 @@
       q: (p.question || "").toUpperCase(),
       side, stake: num(b.stake),
       price: price > 0 ? price : 0.5,
-      status, countdown: status === "pending" ? 115 : 0, outcome,
+      status,
+      settlesAt: p.settlesAt || null,
+      countdown: status !== "pending" ? 0
+        : (p.settlesAt ? Math.max(0, Math.round((new Date(p.settlesAt).getTime() - Date.now()) / 1000)) : 115),
+      outcome,
       rare: false,
       stat: p.contextText || "Settled via TxODDS scores stream",
       statMin: 0, player: "WORLD CUP MOMENT",
