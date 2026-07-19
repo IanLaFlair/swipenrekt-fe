@@ -7,12 +7,13 @@ export default function PositionsPage() {
   const navigate = useNavigate();
   const positions = useAppStore((s) => s.positions);
 
-  const activeCount = positions.filter((p) => p.status === "pending").length;
-  const atStake = positions.filter((p) => p.status === "pending").reduce((a, p) => a + p.stake, 0);
+  const isPending = (p) => p.status === "pending" || p.status === "active";
+  const activeCount = positions.filter(isPending).length;
+  const atStake = positions.filter(isPending).reduce((a, p) => a + p.stake, 0);
 
   const positionsView = positions.map((p) => {
     const v = enrichPosition(p);
-    v.onSettle = () => useAppStore.getState().settle(p.id);
+    v.onClaim = () => useAppStore.getState().claim(p.id);
     v.onOpen = () => navigate("/positions/" + p.id);
     return v;
   });

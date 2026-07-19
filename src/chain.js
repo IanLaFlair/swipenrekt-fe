@@ -183,6 +183,37 @@ export async function settleAndClaimOnChain({ proposition, side, outcome }) {
   }
 }
 
+// ---- claim-only: collect a payout the backend authority already declared -----
+// The user never settles the market themselves (that's admin-only via
+// POST /proposition/{id}/settle → settle_market_mock). Once the backend has
+// declared the winning side, a winner calls claim_payout to pull their SOL.
+export async function claimPayoutOnChain({ proposition }) {
+  const phantom = getPhantom();
+  if (!phantom) { const e = new Error("Phantom not found"); e.code = "NO_PHANTOM"; throw e; }
+  if (!phantom.publicKey) { await phantom.connect(); }
+  const user = new PublicKey(phantom.publicKey.toString());
+
+  const p = marketParams(proposition);
+  const market = marketPda(p);
+  if (!(await connection.getAccountInfo(market))) { const e = new Error("Market not on-chain yet"); e.code = "NO_MARKET"; throw e; }
+
+  const ixClaim = new TransactionInstruction({
+    programId: PROGRAM_ID,
+    keys: [
+      ak(market, false, false), ak(positionPda(market, user), false, true), ak(vaultPda(market), false, true),
+      ak(user, true, true), ak(SYS, false, false),
+    ],
+    data: disc("claim_payout"),
+  });
+  const tx = new Transaction().add(ixClaim);
+  tx.feePayer = user;
+  tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+  const signed = await phantom.signTransaction(tx);
+  const sig = await connection.sendRawTransaction(signed.serialize());
+  await connection.confirmTransaction(sig, "confirmed");
+  return { claimSig: sig };
+}
+
 // The connected Phantom wallet's live devnet SOL balance (null if not connected).
 // Phantom's connection doesn't survive a page reload, so if we're logged in but
 // the provider has no publicKey yet, silently re-establish it (onlyIfTrusted =

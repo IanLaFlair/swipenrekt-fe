@@ -66,26 +66,30 @@ export default function Positions({ v }) {
                   </span>
                 </div>
                 {p.isPending ? (
-                  <>
-                  <div style={{ marginTop: "13px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontFamily: "'Space Mono',monospace", fontSize: "12px", color: p.canSettle ? "#00ff9d" : "#ffcf4d" }}>
-                      <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: p.canSettle ? "#00ff9d" : "#ffcf4d", animation: "snrPulse 1.4s infinite" }} />
-                      {p.canSettle ? "Window closed · ready" : ("Settles in " + p.cdStr)}
-                    </div>
-                    {p.canSettle ? (
-                      <button onClick={p.onSettle} style={{ background: "rgba(0,255,157,.12)", border: "1px solid rgba(0,255,157,.4)", borderRadius: "9px", color: "#00ff9d", fontSize: "11px", fontWeight: "700", letterSpacing: ".5px", padding: "7px 12px", cursor: "pointer" }}>
-                        SETTLE + CLAIM
-                      </button>
-                    ) : null}
+                  <div style={{ marginTop: "13px", display: "flex", alignItems: "center", gap: "6px", fontFamily: "'Space Mono',monospace", fontSize: "12px", color: "#ffcf4d" }}>
+                    <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#ffcf4d", animation: "snrPulse 1.4s infinite" }} />
+                    {p.windowOpen ? ("Bet closes in " + p.cdStr) : "Awaiting result · not settled yet"}
                   </div>
-                  </>
+                ) : null}
+                {p.canClaim ? (
+                  <button onClick={p.onClaim} style={{ marginTop: "13px", width: "100%", background: "rgba(0,255,157,.12)", border: "1px solid rgba(0,255,157,.4)", borderRadius: "10px", color: "#00ff9d", fontSize: "12px", fontWeight: "700", letterSpacing: ".5px", padding: "9px 0", cursor: "pointer" }}>
+                    {"CLAIM " + p.potentialStr + " →"}
+                  </button>
+                ) : null}
+                {p.isWon && p.claimed ? (
+                  <div style={{ marginTop: "13px", fontFamily: "'Space Mono',monospace", fontSize: "12px", color: "#00ff9d", textAlign: "center" }}>
+                    ✓ Payout claimed
+                  </div>
+                ) : null}
+                {p.isLost ? (
+                  <div style={{ marginTop: "13px", fontFamily: "'Space Mono',monospace", fontSize: "12px", color: "#9a9ab0", textAlign: "center" }}>
+                    No win this time
+                  </div>
                 ) : null}
                 {p.isSettled ? (
-                  <>
-                  <button onClick={p.onOpen} style={{ marginTop: "13px", width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", borderRadius: "10px", color: "#cfcfe0", fontSize: "12px", fontWeight: "600", padding: "9px 0", cursor: "pointer" }}>
+                  <button onClick={p.onOpen} style={{ marginTop: "10px", width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", borderRadius: "10px", color: "#cfcfe0", fontSize: "12px", fontWeight: "600", padding: "9px 0", cursor: "pointer" }}>
                     View verifiable receipt →
                   </button>
-                  </>
                 ) : null}
               </div>
             </React.Fragment>
