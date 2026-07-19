@@ -181,6 +181,7 @@ export const useAppStore = create(persist((set, get) => ({
       // market-identity fields so SETTLE NOW can resolve this bet on-chain later
       betProp: {
         id: card.id,
+        marketAddress: card.marketAddress || null,
         onChainFixtureId: card.onChainFixtureId, onChainStatKey: card.onChainStatKey,
         onChainThreshold: card.onChainThreshold, onChainComparison: card.onChainComparison,
         onChainWindowStart: card.onChainWindowStart, onChainWindowEnd: card.onChainWindowEnd,

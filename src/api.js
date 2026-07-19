@@ -215,6 +215,7 @@
       onchain: !!b.txSignature,
       betProp: {
         id: p.id,
+        marketAddress: p.marketAddress || null,
         onChainFixtureId: p.onChainFixtureId, onChainStatKey: p.onChainStatKey,
         onChainThreshold: p.onChainThreshold, onChainComparison: p.onChainComparison,
         onChainWindowStart: p.onChainWindowStart, onChainWindowEnd: p.onChainWindowEnd,

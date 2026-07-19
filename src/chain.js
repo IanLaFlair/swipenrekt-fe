@@ -83,6 +83,15 @@ export function marketParams(prop) {
 function marketPda(p) {
   return pdaOf([enc("market"), i64(p.fixtureId), u32(p.statKey), i64(p.windowStart)]);
 }
+// Prefer the market address the backend actually created (POST .../init-market
+// stores it) over re-deriving the PDA from params — this guarantees the FE hits
+// exactly the keeper's market, with zero seed-derivation mismatch risk. Falls
+// back to the derived PDA (hash/derived path) when the backend hasn't set one.
+function resolveMarket(prop, params) {
+  const addr = (prop && typeof prop === "object") ? prop.marketAddress : null;
+  if (addr) { try { return new PublicKey(addr); } catch (_) { /* bad addr → derive */ } }
+  return marketPda(params);
+}
 const rewardPoolPda = () => pdaOf([enc("reward_pool")]);
 const rewardVaultPda = () => pdaOf([enc("reward_vault")]);
 const vaultPda = (market) => pdaOf([enc("vault"), market.toBuffer()]);
@@ -103,8 +112,7 @@ export function ixInitMarket(authority, p) {
     data: Buffer.concat([disc("initialize_market"), i64(p.fixtureId), u32(p.statKey), i32(p.period ?? PERIOD), i32(p.threshold ?? THRESHOLD), u8(p.comparison ?? COMPARISON), i64(p.windowStart), i64(p.windowEnd)]),
   });
 }
-export function ixPlaceBet(user, p, side /* 'yes'|'no' */, stakeLamports, priceBps) {
-  const market = marketPda(p);
+export function ixPlaceBet(user, market, side /* 'yes'|'no' */, stakeLamports, priceBps) {
   return new TransactionInstruction({
     programId: PROGRAM_ID,
     keys: [
@@ -138,7 +146,7 @@ export async function settleAndClaimOnChain({ proposition, side, outcome }) {
   const user = new PublicKey(phantom.publicKey.toString());
 
   const p = marketParams(proposition);
-  const market = marketPda(p);
+  const market = resolveMarket(proposition, p);
   if (!(await connection.getAccountInfo(market))) { const e = new Error("Market not on-chain yet"); e.code = "NO_MARKET"; throw e; }
 
   const won = outcome === "won";
@@ -194,7 +202,7 @@ export async function claimPayoutOnChain({ proposition }) {
   const user = new PublicKey(phantom.publicKey.toString());
 
   const p = marketParams(proposition);
-  const market = marketPda(p);
+  const market = resolveMarket(proposition, p);
   if (!(await connection.getAccountInfo(market))) { const e = new Error("Market not on-chain yet"); e.code = "NO_MARKET"; throw e; }
 
   const ixClaim = new TransactionInstruction({
@@ -244,7 +252,7 @@ export async function placeBetOnChain({ proposition, propositionId, side, stakeS
   // Prefer the full proposition (carries the backend's on-chain fields); fall
   // back to just the id (hash-derived market).
   const p = marketParams(proposition || propositionId);
-  const market = marketPda(p);
+  const market = resolveMarket(proposition, p);
 
   // Enough devnet SOL for the stake + ~account rent + fees?
   const bal = await connection.getBalance(user);
@@ -258,7 +266,7 @@ export async function placeBetOnChain({ proposition, propositionId, side, stakeS
     tx.add(ixInitMarket(user, p));
   }
   const priceBps = Math.max(0, Math.min(10000, Math.round(priceProb * 10000)));
-  tx.add(ixPlaceBet(user, p, side, solToLamports(stakeSol), priceBps));
+  tx.add(ixPlaceBet(user, market, side, solToLamports(stakeSol), priceBps));
 
   tx.feePayer = user;
   tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
