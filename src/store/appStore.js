@@ -121,10 +121,14 @@ export const useAppStore = create(persist((set, get) => ({
       const positions = mapped.filter(p => p.status === 'pending');
       const history = mapped.filter(p => p.status !== 'pending');
       // Merge, don't replace: keep locally-placed on-chain bets (persisted in
-      // localStorage, not returned by /bets) and add the API's bets on top.
+      // localStorage) that the API doesn't know about, and drop any local copy
+      // the backend has now recorded — matched by id or on-chain tx signature —
+      // so a DB-backed bet and its local twin never show twice (API wins).
       const merge = (existing, incoming) => {
-        const incomingIds = new Set(incoming.map(x => x.id));
-        return [...existing.filter(x => !incomingIds.has(x.id)), ...incoming];
+        const apiIds = new Set(incoming.map(x => x.id));
+        const apiTx = new Set(incoming.map(x => x.txSig).filter(Boolean));
+        const kept = existing.filter(x => !apiIds.has(x.id) && !(x.txSig && apiTx.has(x.txSig)));
+        return [...kept, ...incoming];
       };
       set(s => ({
         positions: merge(s.positions || [], positions),
@@ -168,6 +172,13 @@ export const useAppStore = create(persist((set, get) => ({
         .then(({ signature }) => {
           set(s => ({ positions: s.positions.map(p => p.id === newPos.id ? { ...p, txSig: signature, onchain: true } : p) }));
           showToast(set, '✓  ' + stakeSol.toFixed(3) + ' SOL escrowed on-chain', 3400);
+          // Record it in the backend DB (best-effort): the API verifies this
+          // txSignature against the on-chain market and stores the bet, so it
+          // shows up in GET /bets across devices. Failure just leaves the
+          // locally-persisted copy — the on-chain bet itself already stands.
+          if (window.SNR && window.SNR.getToken()) {
+            window.SNR.raw.placeBet(card.id, side === 'yes', signature).catch(() => {});
+          }
         })
         .catch((err) => {
           set(s => ({ positions: s.positions.filter(p => p.id !== newPos.id) }));

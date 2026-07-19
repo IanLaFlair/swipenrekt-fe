@@ -76,7 +76,10 @@
     leaderboard: (page = 1, limit = 10) => req("GET", "/user/leaderboard", { query: { page, limit } }),
     openPack: (userPackId) => req("POST", "/user/pack/open", { auth: true, body: { userPackId } }),
     bets: (page = 1, limit = 20) => req("GET", "/bets", { auth: true, query: { page, limit } }),
-    placeBet: (propositionId, pick, stake) => req("POST", "/bets", { auth: true, body: { propositionId, pick, stake } }),
+    // Records an already-placed on-chain bet: the backend verifies txSignature
+    // against the proposition's on-chain market (amount/side/wallet) and derives
+    // the stake from the verified transfer — no DB balance is touched.
+    placeBet: (propositionId, pick, txSignature) => req("POST", "/bets", { auth: true, body: { propositionId, pick, txSignature } }),
     matches: (status = "live", page = 1, limit = 10) => req("GET", "/match", { query: { status, page, limit } }),
     liveMatches: () => req("GET", "/match/live"),
     propositions: (matchId, page = 1, limit = 20) => req("GET", "/proposition", { query: { match_id: matchId, page, limit } }),
@@ -187,6 +190,17 @@
       statMin: 0, player: "WORLD CUP MOMENT",
       moment: (p.question || "") ,
       potentialWin: num(b.potentialWin),
+      // on-chain linkage so a DB-loaded bet can still settle+claim on-chain and
+      // be de-duplicated against a locally-tracked copy of the same tx.
+      txSig: b.txSignature || null,
+      positionAddress: b.positionAddress || null,
+      onchain: !!b.txSignature,
+      betProp: {
+        id: p.id,
+        onChainFixtureId: p.onChainFixtureId, onChainStatKey: p.onChainStatKey,
+        onChainThreshold: p.onChainThreshold, onChainComparison: p.onChainComparison,
+        onChainWindowStart: p.onChainWindowStart, onChainWindowEnd: p.onChainWindowEnd,
+      },
       _proposition: p
     };
   }
