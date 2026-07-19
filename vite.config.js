@@ -3,9 +3,18 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  // Port 3000 is not cosmetic: the backend CORS allowlist only admits
-  // http://localhost:3000, so any other port gets "Failed to fetch".
-  server: { port: 3000, strictPort: true },
+  // Dev-server proxy: /api/* → the real backend, so the browser talks
+  // same-origin and never hits CORS (mirrors the Vercel rewrite in prod).
+  server: {
+    port: 3000, strictPort: true,
+    proxy: {
+      "/api": {
+        target: "https://swipe-api.fachry.dev",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api/, ""),
+      },
+    },
+  },
   preview: { port: 3000, strictPort: true },
   build: { outDir: "dist", sourcemap: true },
 });

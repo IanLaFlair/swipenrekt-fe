@@ -4,7 +4,10 @@
 (() => {
   "use strict";
 
-  const BASE = "https://swipe-api.fachry.dev";
+  // Relative base: requests go same-origin to /api and are proxied to the real
+  // backend (Vite dev-server proxy locally, Vercel rewrite in prod). This makes
+  // reads same-origin, so the backend's CORS allowlist never applies.
+  const BASE = "/api";
   const LS_TOKEN = "snr_token";
   const LS_WALLET = "snr_wallet";
   const LS_NONCE = "snr_nonce";

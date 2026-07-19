@@ -5,7 +5,7 @@
  * them up instead — safe precisely because the hash changes with the content.
  * unpkg is gone from RUNTIME_HOSTS: React is bundled, not fetched at runtime.
  */
-const VERSION = "snr-v4";
+const VERSION = "snr-v5";
 const SHELL = [
   "/",
   "/index.html",
@@ -36,8 +36,9 @@ self.addEventListener("fetch", (e) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
-  // Never intercept the API — it must always hit the network.
-  if (url.hostname.endsWith("fachry.dev")) return;
+  // Never intercept the API — it must always hit the network. Covers both the
+  // direct host and the same-origin /api proxy path (Vite dev / Vercel rewrite).
+  if (url.hostname.endsWith("fachry.dev") || url.pathname.startsWith("/api/")) return;
 
   // App navigation: network-first, fall back to the cached shell (offline).
   if (req.mode === "navigate") {
