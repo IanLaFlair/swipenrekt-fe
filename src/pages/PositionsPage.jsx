@@ -22,7 +22,7 @@ export default function PositionsPage() {
       v={{
         goArena: () => navigate("/arena"),
         activeCount,
-        atStakeStr: "$" + atStake,
+        atStakeStr: "◎" + atStake,
         positionsView
       }}
     />

@@ -126,22 +126,22 @@ export function makeReceipt() {
 
 export function buildSeeds() {
   return [
-    { id: 'seed1', mLabel: 'ARG 2–1 FRA', q: 'MESSI TO ASSIST OR SCORE?', side: 'yes', stake: 50, price: 0.33, status: 'won', countdown: 0, outcome: 'won', rare: true, stat: 'Messi assist on 2nd goal', statMin: 58, player: 'LIONEL MESSI', moment: 'Assist · 58’ · ARG vs FRA', receipt: makeReceipt() },
-    { id: 'seed2', mLabel: 'GER 1–1 NED', q: 'YELLOW CARD IN THE NEXT 10 MIN?', side: 'no', stake: 20, price: 0.36, status: 'lost', countdown: 0, outcome: 'lost', rare: false, stat: 'Yellow card shown at 71’', statMin: 71, player: '', moment: '', receipt: makeReceipt() },
-    { id: 'seed3', mLabel: 'BRA 0–0 ESP', q: 'NEXT CORNER TO BRAZIL?', side: 'yes', stake: 20, price: 0.56, status: 'pending', countdown: 138, outcome: 'won', rare: true, stat: 'Corner awarded to Brazil', statMin: 24, player: 'RAPHINHA', moment: 'Corner won · 24’ · BRA vs ESP', receipt: makeReceipt() }
+    { id: 'seed1', mLabel: 'ARG 2–1 FRA', q: 'MESSI TO ASSIST OR SCORE?', side: 'yes', stake:0.05, price: 0.33, status: 'won', countdown: 0, outcome: 'won', rare: true, stat: 'Messi assist on 2nd goal', statMin: 58, player: 'LIONEL MESSI', moment: 'Assist · 58’ · ARG vs FRA', receipt: makeReceipt() },
+    { id: 'seed2', mLabel: 'GER 1–1 NED', q: 'YELLOW CARD IN THE NEXT 10 MIN?', side: 'no', stake:0.02, price: 0.36, status: 'lost', countdown: 0, outcome: 'lost', rare: false, stat: 'Yellow card shown at 71’', statMin: 71, player: '', moment: '', receipt: makeReceipt() },
+    { id: 'seed3', mLabel: 'BRA 0–0 ESP', q: 'NEXT CORNER TO BRAZIL?', side: 'yes', stake:0.02, price: 0.56, status: 'pending', countdown: 138, outcome: 'won', rare: true, stat: 'Corner awarded to Brazil', statMin: 24, player: 'RAPHINHA', moment: 'Corner won · 24’ · BRA vs ESP', receipt: makeReceipt() }
   ];
 }
 
 export function buildHistory() {
   const r = () => makeReceipt();
   return [
-    { id:'h1', mLabel:'ARG 2–1 FRA', q:'GOAL IN THE NEXT 5 MINUTES?', side:'yes', stake:20, price:0.41, status:'won', countdown:0, outcome:'won', rare:false, stat:'Goal scored by Álvarez', statMin:64, player:'', moment:'', receipt:r() },
-    { id:'h2', mLabel:'BRA 0–0 ESP', q:'TOTAL CORNERS OVER 9?', side:'no', stake:30, price:0.52, status:'lost', countdown:0, outcome:'lost', rare:false, stat:'11 corners reached at 80’', statMin:80, player:'', moment:'', receipt:r() },
-    { id:'h3', mLabel:'POR 1–0 MEX', q:'RONALDO TO SCORE AGAIN?', side:'yes', stake:25, price:0.27, status:'won', countdown:0, outcome:'won', rare:true, stat:'Ronaldo goal at 63’', statMin:63, player:'RONALDO', moment:'Goal · 63’ · POR vs MEX', receipt:r() },
-    { id:'h4', mLabel:'GER 1–1 NED', q:'MATCH WINNER: NETHERLANDS?', side:'no', stake:40, price:0.61, status:'won', countdown:0, outcome:'won', rare:false, stat:'Match ended level', statMin:90, player:'', moment:'', receipt:r() },
-    { id:'h5', mLabel:'ARG 2–1 FRA', q:'MBAPPÉ TO SCORE BEFORE 80’?', side:'yes', stake:20, price:0.36, status:'lost', countdown:0, outcome:'lost', rare:false, stat:'No goal before 80’', statMin:80, player:'', moment:'', receipt:r() },
-    { id:'h6', mLabel:'BRA 0–0 ESP', q:'NEXT CORNER TO SPAIN?', side:'yes', stake:15, price:0.47, status:'won', countdown:0, outcome:'won', rare:false, stat:'Corner to Spain at 31’', statMin:31, player:'', moment:'', receipt:r() },
-    { id:'h7', mLabel:'POR 1–0 MEX', q:'YELLOW CARD IN 10 MIN?', side:'yes', stake:20, price:0.58, status:'won', countdown:0, outcome:'won', rare:false, stat:'Booking at 57’', statMin:57, player:'', moment:'', receipt:r() },
-    { id:'h8', mLabel:'GER 1–1 NED', q:'GOAL IN THE NEXT 5 MINUTES?', side:'no', stake:30, price:0.55, status:'lost', countdown:0, outcome:'lost', rare:false, stat:'Goal scored at 76’', statMin:76, player:'', moment:'', receipt:r() }
+    { id:'h1', mLabel:'ARG 2–1 FRA', q:'GOAL IN THE NEXT 5 MINUTES?', side:'yes', stake:0.02, price:0.41, status:'won', countdown:0, outcome:'won', rare:false, stat:'Goal scored by Álvarez', statMin:64, player:'', moment:'', receipt:r() },
+    { id:'h2', mLabel:'BRA 0–0 ESP', q:'TOTAL CORNERS OVER 9?', side:'no', stake:0.03, price:0.52, status:'lost', countdown:0, outcome:'lost', rare:false, stat:'11 corners reached at 80’', statMin:80, player:'', moment:'', receipt:r() },
+    { id:'h3', mLabel:'POR 1–0 MEX', q:'RONALDO TO SCORE AGAIN?', side:'yes', stake:0.025, price:0.27, status:'won', countdown:0, outcome:'won', rare:true, stat:'Ronaldo goal at 63’', statMin:63, player:'RONALDO', moment:'Goal · 63’ · POR vs MEX', receipt:r() },
+    { id:'h4', mLabel:'GER 1–1 NED', q:'MATCH WINNER: NETHERLANDS?', side:'no', stake:0.04, price:0.61, status:'won', countdown:0, outcome:'won', rare:false, stat:'Match ended level', statMin:90, player:'', moment:'', receipt:r() },
+    { id:'h5', mLabel:'ARG 2–1 FRA', q:'MBAPPÉ TO SCORE BEFORE 80’?', side:'yes', stake:0.02, price:0.36, status:'lost', countdown:0, outcome:'lost', rare:false, stat:'No goal before 80’', statMin:80, player:'', moment:'', receipt:r() },
+    { id:'h6', mLabel:'BRA 0–0 ESP', q:'NEXT CORNER TO SPAIN?', side:'yes', stake:0.015, price:0.47, status:'won', countdown:0, outcome:'won', rare:false, stat:'Corner to Spain at 31’', statMin:31, player:'', moment:'', receipt:r() },
+    { id:'h7', mLabel:'POR 1–0 MEX', q:'YELLOW CARD IN 10 MIN?', side:'yes', stake:0.02, price:0.58, status:'won', countdown:0, outcome:'won', rare:false, stat:'Booking at 57’', statMin:57, player:'', moment:'', receipt:r() },
+    { id:'h8', mLabel:'GER 1–1 NED', q:'GOAL IN THE NEXT 5 MINUTES?', side:'no', stake:0.03, price:0.55, status:'lost', countdown:0, outcome:'lost', rare:false, stat:'Goal scored at 76’', statMin:76, player:'', moment:'', receipt:r() }
   ];
 }

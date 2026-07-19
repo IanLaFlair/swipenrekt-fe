@@ -148,9 +148,8 @@ export const useAppStore = create((set, get) => ({
     const goChain = isUuid && !!phantom;
     set(s => ({ positions: [newPos, ...s.positions] }));
     if (goChain) {
-      // Demo scale: the UI's number maps to a small SOL amount ($20 -> 0.02 SOL)
-      // so a devnet wallet lasts many bets.
-      const stakeSol = Math.max(0.001, stake / 1000);
+      // The stake is already in SOL (UI presets are 0.01–0.1 SOL).
+      const stakeSol = Math.max(0.001, stake);
       placeBetOnChain({ propositionId: card.id, side, stakeSol, priceProb: card.yes })
         .then(({ signature }) => {
           set(s => ({ positions: s.positions.map(p => p.id === newPos.id ? { ...p, txSig: signature, onchain: true } : p) }));

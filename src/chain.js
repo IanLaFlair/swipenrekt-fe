@@ -102,6 +102,16 @@ export const solToLamports = (sol) => Math.round(sol * LAMPORTS_PER_SOL);
 export const lamportsToSol = (l) => l / LAMPORTS_PER_SOL;
 export const explorerTx = (sig) => `https://explorer.solana.com/tx/${sig}?cluster=${CLUSTER}`;
 
+// The connected Phantom wallet's live devnet SOL balance (null if not connected).
+export async function getWalletSol() {
+  const p = getPhantom();
+  if (!p || !p.publicKey) return null;
+  try {
+    const lamports = await connection.getBalance(new PublicKey(p.publicKey.toString()));
+    return lamports / LAMPORTS_PER_SOL;
+  } catch (_) { return null; }
+}
+
 // ---- high-level: place a real on-chain bet via Phantom ---------------------
 // stakeSol in SOL (e.g. 0.05). priceProb = implied probability 0..1.
 // Creates the market on first bet if it doesn't exist yet (payer = user),

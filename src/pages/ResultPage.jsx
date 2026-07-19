@@ -14,7 +14,7 @@ export default function ResultPage() {
 
   const sel = [...positions, ...history].find((p) => p.id === id) || {};
   const selWon = sel.status === "won";
-  const selPayout = sel.price ? Math.round(sel.stake / sel.price) : 0;
+  const selPayout = sel.price ? +(sel.stake / sel.price).toFixed(3) : 0;
   const rc = sel.receipt || {};
 
   const v = {
@@ -24,10 +24,10 @@ export default function ResultPage() {
     selMatch: sel.mLabel || "",
     selSideLabel: sel.side === "yes" ? "YES" : "NO",
     selSideColor: sel.side === "yes" ? "#00ff9d" : "#ff3d6e",
-    selStakeStr: "$" + (sel.stake || 0),
+    selStakeStr: "◎" + (sel.stake || 0),
     selPriceCents: Math.round((sel.price || 0) * 100),
     selOutcomeLabel: selWon ? "YOU WON" : "DIDN'T HIT",
-    selPayoutStr: selWon ? ("+$" + selPayout) : ("−$" + (sel.stake || 0)),
+    selPayoutStr: selWon ? ("+◎" + selPayout) : ("−◎" + (sel.stake || 0)),
     selPayoutColor: selWon ? "#00ff9d" : "#ff3d6e",
     selGlow: selWon ? "rgba(0,255,157,.16)" : "rgba(255,61,110,.13)",
     selStat: sel.stat || "",

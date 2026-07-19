@@ -1,7 +1,8 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/appStore.js";
 import { useAuthStore } from "../store/authStore.js";
+import { getWalletSol } from "../chain.js";
 
 const clamp = (v) => Math.max(0, Math.min(1, v));
 
@@ -21,9 +22,20 @@ export default function ArenaPage() {
   const [exiting, setExiting] = useState(null);
   const [exit, setExit] = useState({ x: 0, y: 0, r: 0 });
   const [sheet, setSheet] = useState(null); // { side: 'yes' | 'no' }
-  const [stake, setStake] = useState(20);
+  const [stake, setStake] = useState(0.02);
   const [slideX, setSlideX] = useState(0);
   const [sliding, setSliding] = useState(false);
+  const [walletSol, setWalletSol] = useState(null);
+
+  // Live devnet SOL balance of the connected wallet — refreshes on mount and
+  // whenever a position is placed (so the escrowed SOL shows up).
+  useEffect(() => {
+    let alive = true;
+    const tick = () => getWalletSol().then((v) => { if (alive) setWalletSol(v); });
+    tick();
+    const iv = setInterval(tick, 8000);
+    return () => { alive = false; clearInterval(iv); };
+  }, [positions.length]);
 
   const startRef = useRef(null);
   const slideStartRef = useRef(0);
@@ -82,8 +94,8 @@ export default function ArenaPage() {
   };
   const closeSheet = () => { setSheet(null); setSlideX(0); setSliding(false); };
   const onStakeInput = (e) => {
-    const digits = (e.target.value || "").replace(/[^0-9]/g, "");
-    const n = digits === "" ? 0 : Math.min(9999, parseInt(digits, 10));
+    const digits = (e.target.value || "").replace(/[^0-9.]/g, "");
+    const n = digits === "" ? 0 : Math.min(100, parseFloat(digits) || 0);
     setStake(n);
   };
 
@@ -145,8 +157,8 @@ export default function ArenaPage() {
   const noPct = 100 - yesPct;
   const card = Object.assign({}, raw, {
     yesPct, noPct, yesCents: yesPct, noCents: noPct,
-    yesWin: stake > 0 ? Math.round(stake / raw.yes) : 0,
-    noWin: stake > 0 ? Math.round(stake / (1 - raw.yes)) : 0,
+    yesWin: stake > 0 ? +(stake / raw.yes).toFixed(3) : 0,
+    noWin: stake > 0 ? +(stake / (1 - raw.yes)).toFixed(3) : 0,
     windowLabel: Math.round(raw.windowSec / 60) + " MIN",
     scoreStr: raw.hs + " : " + raw.as
   });
@@ -184,8 +196,8 @@ export default function ArenaPage() {
   const sheetAccent = sSide === "yes" ? "#00ff9d" : "#ff3d6e";
   const sheetAccentSoft = sSide === "yes" ? "rgba(0,255,157,.12)" : "rgba(255,61,110,.12)";
   const sheetAccentBorder = sSide === "yes" ? "rgba(0,255,157,.45)" : "rgba(255,61,110,.45)";
-  const presets = [10, 20, 50, 100].map((v) => ({
-    v, label: "$" + v,
+  const presets = [0.01, 0.02, 0.05, 0.1].map((v) => ({
+    v, label: "◎" + v,
     bg: stake === v ? sheetAccentSoft : "rgba(255,255,255,.04)",
     border: stake === v ? "1px solid " + sheetAccentBorder : "1px solid rgba(255,255,255,.08)",
     color: stake === v ? sheetAccent : "#cfcfe0",
@@ -195,7 +207,7 @@ export default function ArenaPage() {
   const slideProgress = clamp((slideX || 0) / slideMaxR);
 
   const undoOpen = !!undo;
-  const undoText = undo ? ("✓  Position placed · $" + undo.stake + " on " + (undo.side === "yes" ? "YES" : "NO")) : "";
+  const undoText = undo ? ("✓  Position placed · ◎" + undo.stake + " on " + (undo.side === "yes" ? "YES" : "NO")) : "";
 
   const toastShow = !!toast;
 
@@ -309,12 +321,12 @@ export default function ArenaPage() {
             <div style={{ flex: "1", background: "rgba(255,61,110,.08)", border: "1px solid rgba(255,61,110,.28)", borderRadius: "14px", padding: "11px 13px", display: "flex", flexDirection: "column", gap: "2px" }}>
               <div style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "1px", color: "#ff3d6e" }}>← NO</div>
               <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "22px", fontWeight: "700", color: "#fff" }}>{card.noCents}¢</div>
-              <div style={{ fontSize: "11px", color: "#7a7a8c" }}>{"$" + stake}{" → $"}{card.noWin}</div>
+              <div style={{ fontSize: "11px", color: "#7a7a8c" }}>{"◎" + stake}{" → ◎"}{card.noWin}</div>
             </div>
             <div style={{ flex: "1", background: "rgba(0,255,157,.08)", border: "1px solid rgba(0,255,157,.28)", borderRadius: "14px", padding: "11px 13px", display: "flex", flexDirection: "column", gap: "2px", alignItems: "flex-end", textAlign: "right" }}>
               <div style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "1px", color: "#00ff9d" }}>YES →</div>
               <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "22px", fontWeight: "700", color: "#fff" }}>{card.yesCents}¢</div>
-              <div style={{ fontSize: "11px", color: "#7a7a8c" }}>{"$" + stake}{" → $"}{card.yesWin}</div>
+              <div style={{ fontSize: "11px", color: "#7a7a8c" }}>{"◎" + stake}{" → ◎"}{card.yesWin}</div>
             </div>
           </div>
         </div>
@@ -323,8 +335,8 @@ export default function ArenaPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
           <div style={{ fontSize: "10px", letterSpacing: "1.5px", color: "#6a6a7c", fontWeight: "600" }}>BALANCE</div>
           <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "15px", fontWeight: "700", color: "#fff" }}>
-            {balanceStr}{" "}
-            <span style={{ fontSize: "10px", color: "#00ff9d" }}>USDC</span>
+            {walletSol != null ? walletSol.toFixed(3) : "—"}{" "}
+            <span style={{ fontSize: "10px", color: "#00ff9d" }}>SOL</span>
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "1px", alignItems: "flex-end" }}>
@@ -418,10 +430,10 @@ export default function ArenaPage() {
         </div>
         <div style={{ fontSize: "10px", letterSpacing: "1.5px", color: "#6a6a7c", fontWeight: "600", marginBottom: "7px" }}>YOUR STAKE</div>
         <div style={{ display: "flex", alignItems: "center", gap: "5px", background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", borderRadius: "14px", padding: "11px 16px", marginBottom: "12px" }}>
-          <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "26px", fontWeight: "700", color: "#fff" }}>$</span>
+          <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "26px", fontWeight: "700", color: "#fff" }}>◎</span>
           <input value={stake} onInput={onStakeInput} inputMode="numeric" style={{ flex: "1", minWidth: "0", background: "transparent", border: "none", outline: "none", color: "#fff", fontFamily: "'Space Mono',monospace", fontSize: "26px", fontWeight: "700", padding: "0" }} />
           <span style={{ color: "#7a7a8c", fontSize: "17px" }}>✎</span>
-          <span style={{ color: "#6a6a7c", fontSize: "11px", letterSpacing: ".5px", marginLeft: "2px" }}>USDC</span>
+          <span style={{ color: "#6a6a7c", fontSize: "11px", letterSpacing: ".5px", marginLeft: "2px" }}>SOL</span>
         </div>
         <div style={{ display: "flex", gap: "8px", marginBottom: "18px" }}>
           {presets.map((p, p__i) => (
@@ -439,7 +451,7 @@ export default function ArenaPage() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "flex-end" }}>
             <span style={{ fontSize: "10px", letterSpacing: "1px", color: "#6a6a7c", fontWeight: "600" }}>WIN →</span>
-            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "24px", fontWeight: "700", color: sheetAccent }}>${stake > 0 ? Math.round(stake / price) : 0}</span>
+            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "24px", fontWeight: "700", color: sheetAccent }}>◎{stake > 0 ? +(stake / price).toFixed(3) : 0}</span>
           </div>
         </div>
         <div data-slidetrack="1" style={{ position: "relative", height: "56px", borderRadius: "16px", background: sheetAccentSoft, border: `1px solid ${sheetAccentBorder}`, overflow: "hidden" }}>
