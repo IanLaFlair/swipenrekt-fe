@@ -24,6 +24,9 @@ export default function Profile({ v }) {
                 </span>
               </div>
             </div>
+            <button onClick={v.onLogout} className="snr-press" style={{ marginLeft: "auto", flexShrink: 0, border: "1px solid rgba(255,61,110,.4)", background: "rgba(255,61,110,.1)", color: "#ff6b8a", borderRadius: "10px", padding: "8px 13px", fontSize: "12px", fontWeight: "700", cursor: "pointer" }}>
+              Disconnect
+            </button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "14px" }}>
             <div style={{ background: "#14141d", border: "1px solid rgba(255,255,255,.07)", borderRadius: "14px", padding: "13px 15px" }}>

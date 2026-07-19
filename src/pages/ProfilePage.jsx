@@ -41,6 +41,12 @@ export default function ProfilePage() {
         profName, walletAddr, profWinRate, profBestStreak, profPredictions, profPnl, profPnlColor,
         albumOwned, albumTotal, albumPctW, profStreakLine,
         packTotal, packsView,
+        onLogout: () => {
+          try { window.SNR && window.SNR.logout(); } catch (_) {}
+          try { const p = window.phantom && window.phantom.solana; p && p.disconnect && p.disconnect(); } catch (_) {}
+          useAuthStore.getState().clearAuth();
+          navigate("/");
+        },
         openHistory: () => navigate("/history"),
         goArena: () => navigate("/arena"),
         goAlbum: () => navigate("/album"),

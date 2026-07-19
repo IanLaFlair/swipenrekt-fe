@@ -103,9 +103,16 @@ export const lamportsToSol = (l) => l / LAMPORTS_PER_SOL;
 export const explorerTx = (sig) => `https://explorer.solana.com/tx/${sig}?cluster=${CLUSTER}`;
 
 // The connected Phantom wallet's live devnet SOL balance (null if not connected).
+// Phantom's connection doesn't survive a page reload, so if we're logged in but
+// the provider has no publicKey yet, silently re-establish it (onlyIfTrusted =
+// no popup when the site was already approved) before reading the balance.
 export async function getWalletSol() {
   const p = getPhantom();
-  if (!p || !p.publicKey) return null;
+  if (!p) return null;
+  if (!p.publicKey) {
+    try { await p.connect({ onlyIfTrusted: true }); } catch (_) { return null; }
+  }
+  if (!p.publicKey) return null;
   try {
     const lamports = await connection.getBalance(new PublicKey(p.publicKey.toString()));
     return lamports / LAMPORTS_PER_SOL;
