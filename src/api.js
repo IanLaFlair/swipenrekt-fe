@@ -93,13 +93,26 @@
     netherlands: "🇳🇱", italy: "🇮🇹", belgium: "🇧🇪", croatia: "🇭🇷", uruguay: "🇺🇾", mexico: "🇲🇽",
     "united states": "🇺🇸", usa: "🇺🇸", canada: "🇨🇦", japan: "🇯🇵", "south korea": "🇰🇷", morocco: "🇲🇦",
     senegal: "🇸🇳", nigeria: "🇳🇬", ghana: "🇬🇭", cameroon: "🇨🇲", egypt: "🇪🇬", australia: "🇦🇺",
-    england: "🏴", colombia: "🇨🇴", ecuador: "🇪🇨", switzerland: "🇨🇭", denmark: "🇩🇰", poland: "🇵🇱"
+    england: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", colombia: "🇨🇴", ecuador: "🇪🇨", switzerland: "🇨🇭", denmark: "🇩🇰", poland: "🇵🇱"
+  };
+  // Proper 3-letter codes (initials are wrong for single-word names, e.g.
+  // "France" -> "F"). Fall back to first 3 letters / word initials when unknown.
+  const CODES = {
+    argentina: "ARG", brazil: "BRA", france: "FRA", spain: "ESP", germany: "GER", portugal: "POR",
+    netherlands: "NED", italy: "ITA", belgium: "BEL", croatia: "CRO", uruguay: "URU", mexico: "MEX",
+    "united states": "USA", usa: "USA", canada: "CAN", japan: "JPN", "south korea": "KOR", morocco: "MAR",
+    senegal: "SEN", nigeria: "NGA", ghana: "GHA", cameroon: "CMR", egypt: "EGY", australia: "AUS",
+    england: "ENG", colombia: "COL", ecuador: "ECU", switzerland: "SUI", denmark: "DEN", poland: "POL"
   };
   function teamMeta(name) {
     const n = (name || "").trim();
-    const flag = FLAGS[n.toLowerCase()] || "⚽";
-    const code = n.replace(/[^A-Za-z ]/g, "").split(/\s+/).map(w => w[0] || "").join("").slice(0, 3).toUpperCase()
-      || n.slice(0, 3).toUpperCase() || "???";
+    const key = n.toLowerCase();
+    const flag = FLAGS[key] || "⚽";
+    let code = CODES[key];
+    if (!code) {
+      const words = n.replace(/[^A-Za-z ]/g, "").split(/\s+/).filter(Boolean);
+      code = ((words.length > 1 ? words.map(w => w[0]).join("") : n).slice(0, 3).toUpperCase()) || "???";
+    }
     return { flag, code };
   }
   const num = (v) => (v === null || v === undefined || v === "" ? 0 : Number(v));
