@@ -166,7 +166,13 @@ export default function ArenaPage() {
     yesWin: stake > 0 ? +(stake * oddsYesMult).toFixed(3) : 0,
     noWin: stake > 0 ? +(stake * oddsNoMult).toFixed(3) : 0,
     windowLabel: Math.round(raw.windowSec / 60) + " MIN",
-    scoreStr: raw.hs + " : " + raw.as
+    scoreStr: raw.hs + " : " + raw.as,
+    // Honest match phase: pre-match for scheduled/not-started fixtures, the live
+    // minute + half when the match is actually running. (Seeded demo cards have
+    // no matchStatus, so they keep their live-style label.)
+    phaseLabel: (raw.matchLive || (raw.matchStatus || "").toLowerCase() === "live")
+      ? ((raw.min ? raw.min + "' · " : "") + (raw.matchPhase || "LIVE")).toUpperCase()
+      : (raw.matchStatus ? "PRE-MATCH" : (raw.min + "' · 2ND HALF"))
   });
 
   let tx, ty, rot;
@@ -289,7 +295,7 @@ export default function ArenaPage() {
             <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,.05)", borderRadius: "9px", padding: "6px 10px", fontFamily: "'Space Mono',monospace", fontSize: "12px", fontWeight: "700", color: "#e6e6f0" }}>
               <span style={{ color: "#ff3d6e" }}>⏱</span>
               {timerStr}
-              <span style={{ color: "#6a6a7c", fontWeight: "400" }}>{"· "}{card.windowLabel}</span>
+              <span style={{ color: "#6a6a7c", fontWeight: "400" }}>{"· bet closes"}</span>
             </div>
             <div style={{ background: "rgba(0,255,157,.1)", border: "1px solid rgba(0,255,157,.25)", borderRadius: "9px", padding: "5px 10px", fontSize: "10px", fontWeight: "700", letterSpacing: "1.5px", color: "#00ff9d" }}>
               {card.cat}
@@ -304,7 +310,7 @@ export default function ArenaPage() {
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", marginTop: "5px", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#7a7a8c", position: "relative", zIndex: "2" }}>
             <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#ff3d6e", animation: "snrPulse 1.4s infinite" }} />
-            {card.min}{"' · 2ND HALF "}
+            {card.phaseLabel}
           </div>
           <div style={{ flex: "1", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: "2" }}>
             <h2 style={{ margin: "0", fontFamily: "'Anton',sans-serif", fontSize: "31px", lineHeight: "1.02", letterSpacing: ".3px", color: "#fff", textAlign: "center", textWrap: "balance" }}>

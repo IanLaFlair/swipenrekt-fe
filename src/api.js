@@ -157,6 +157,7 @@
       matchId: p.matchId,
       home: m.home || "", away: m.away || "", hf: m.hf || "⚽", af: m.af || "⚽",
       hs: m.hs || 0, as: m.as || 0, min: m.min || 0,
+      matchStatus: m.status || "", matchLive: !!m.live, matchPhase: m.phase || "",
       q: (p.question || "").toUpperCase(),
       cat: (p.category || "MARKET").toUpperCase(),
       ctx: p.contextText || "",
