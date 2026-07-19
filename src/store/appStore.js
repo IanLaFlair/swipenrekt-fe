@@ -60,8 +60,14 @@ export const useAppStore = create(persist((set, get) => ({
   async loadMatches() {
     if (!window.SNR) return;
     try {
-      const r = await window.SNR.raw.matches('live', 1, 12);
-      const list = (r && r.data) || [];
+      // The backend's default is status=live, but demo fixtures are seeded as
+      // 'scheduled', so fall back to that when nothing is live yet.
+      let r = await window.SNR.raw.matches('live', 1, 12);
+      let list = (r && r.data) || [];
+      if (!list.length) {
+        r = await window.SNR.raw.matches('scheduled', 1, 12);
+        list = (r && r.data) || [];
+      }
       if (!list.length) return;
       const mapped = list.map(window.SNR.map.match);
       const matchesFull = mapped.map(m => Object.assign({}, m, {
@@ -78,8 +84,11 @@ export const useAppStore = create(persist((set, get) => ({
     try {
       const src = matchesSource || get().matches;
       const match = src.find(m => m.id === matchId);
-      const r = await window.SNR.raw.propositions(matchId, 1, 20);
-      const list = ((r && r.data) || []).filter(p => (p.status || 'open') === 'open');
+      const r = await window.SNR.raw.propositions(matchId, 1, 50);
+      // The API ignores the match_id filter, so restrict to this match here;
+      // only show open markets.
+      const list = ((r && r.data) || []).filter(p =>
+        (p.status || 'open') === 'open' && (!p.matchId || p.matchId === matchId));
       if (!list.length) return;
       const cards = list.map(p => window.SNR.map.proposition(p, match));
       set({ cards, index: 0, timer: cards[0].windowSec, apiLive: true });
